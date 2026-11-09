@@ -1,10 +1,14 @@
-# MypersonalAccess — Android APK auto-build (GitHub Actions) — v4
+# MypersonalAccess — Android APK auto-build (GitHub Actions) — v5
 #
-# v3 se farq (2026-11-09 ~13:35 PKT):
-# - SDK install ab `cmdline-tools/latest` ka rasta HARDCODE nahi karta.
-#   Runner par `latest` naam ka folder ho ya na ho — script khud dhoondta hai
-#   ke sdkmanager kahan para hai. Agar kahin bhi na mile to saaf error dega.
-# - Baaki sab v3 jaisa hai: Gradle seedha gradle.org se (curl), setup-java v5,
+# v4 se farq (2026-11-09 ~14:07 PKT):
+# - v4 ka `find ... -maxdepth 2` GHALAT tha: sdkmanager is raaste par hai
+#   cmdline-tools/latest/bin/sdkmanager — yani depth 3 par, jabke maxdepth 2
+#   sirf depth 2 tak dhoondta hai. Isi liye "not found" aaya jabke "latest"
+#   folder maujood tha (log se saaf nazar aaya).
+# - Ab pehle seedha path check hota hai (latest/bin/sdkmanager), phir sahi
+#   depth (3) par find, aur latest/bin ki listing bhi print hoti hai taake
+#   sab kuch log mein nazar aaye.
+# - Baaki sab v4 jaisa hai: Gradle seedha gradle.org se (curl), setup-java v5,
 #   SDK install + verify, assembleDebug, APK upload.
 
 name: Build Android APK
@@ -39,7 +43,12 @@ jobs:
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME"
           ls "$ANDROID_HOME/cmdline-tools"
-          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -maxdepth 2 -name sdkmanager -type f | head -1)
+          ls "$ANDROID_HOME/cmdline-tools/latest/bin" || true
+          if [ -x "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          else
+            SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -maxdepth 3 -name sdkmanager -type f | head -1)
+          fi
           echo "sdkmanager found at: $SDKMANAGER"
           test -n "$SDKMANAGER" || { echo "ERROR: sdkmanager not found under $ANDROID_HOME/cmdline-tools"; exit 1; }
           yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
