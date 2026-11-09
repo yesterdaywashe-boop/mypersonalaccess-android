@@ -1,0 +1,49 @@
+# MyPersonalAccess — Android APK auto-build (GitHub Actions)
+#
+# Har push par GitHub khud APK bana kar deta hai — PC ya Android Studio ki
+# zaroorat nahi. Bas repo ke Actions tab mein jaao, latest run kholo aur
+# "mypersonalaccess-apk" artifact download kar lo.
+#
+# Note: is repo mein `gradlew` script nahi hai (sirf wrapper properties),
+# is liye build seedha `gradle` command se hota hai (setup-gradle action
+# Gradle 8.7 install karta hai). Debug APK auto-generated debug key se sign
+# hota hai — phone par seedha install ho jata hai.
+
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle 8.7
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: "8.7"
+
+      - name: Install Android SDK 34
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" || true
+
+      - name: Build debug APK
+        run: gradle assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mypersonalaccess-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
