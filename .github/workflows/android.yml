@@ -1,13 +1,12 @@
-# MyPersonalAccess — Android APK auto-build (GitHub Actions)
+# MypersonalAccess — Android APK auto-build (GitHub Actions) — v2
 #
-# Har push par GitHub khud APK bana kar deta hai — PC ya Android Studio ki
-# zaroorat nahi. Bas repo ke Actions tab mein jaao, latest run kholo aur
-# "mypersonalaccess-apk" artifact download kar lo.
-#
-# Note: is repo mein `gradlew` script nahi hai (sirf wrapper properties),
-# is liye build seedha `gradle` command se hota hai (setup-gradle action
-# Gradle 8.7 install karta hai). Debug APK auto-generated debug key se sign
-# hota hai — phone par seedha install ho jata hai.
+# v1 se farq:
+# - setup-java v4 -> v5 (v4 deprecated hai)
+# - SDK install ab ghalti chhupata nahi: pehle licences accept karta hai,
+#   phir platform 34 + build-tools 34.0.0 install karta hai, phir CHECK karta
+#   hai ke dono folders waqai maujood hain. Agar SDK masla hai to log mein
+#   saaf nazar aayega ke kya missing hai.
+# - Baaki sab same hai (Gradle 8.7, assembleDebug, APK upload).
 
 name: Build Android APK
 
@@ -24,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -36,7 +35,14 @@ jobs:
 
       - name: Install Android SDK 34
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0" || true
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          ls "$ANDROID_HOME/cmdline-tools"
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"
+          echo "--- build-tools check ---"
+          ls "$ANDROID_HOME/build-tools/34.0.0" | head -5
+          echo "--- platform check ---"
+          ls -d "$ANDROID_HOME/platforms/android-34"
 
       - name: Build debug APK
         run: gradle assembleDebug --stacktrace
