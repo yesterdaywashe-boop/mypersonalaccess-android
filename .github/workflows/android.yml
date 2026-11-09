@@ -1,13 +1,11 @@
-# MypersonalAccess — Android APK auto-build (GitHub Actions) — v3
+# MypersonalAccess — Android APK auto-build (GitHub Actions) — v4
 #
-# v2 se farq (2026-11-09 ~13:10 PKT):
-# - `gradle/actions/setup-gradle` HATA DIYA — wahi step GitHub ke kharab
-#   cache service se 504/400 kha raha tha. Ab Gradle seedha services.gradle.org
-#   se download hota hai (curl, retry ke saath) — GitHub ki cache service se
-#   iska koi lena dena nahi. Download ke baad `gradle --version` se verify
-#   bhi hota hai ke Gradle theek install hua.
-# - Baaki sab v2 jaisa hai: setup-java v5, SDK install (loud + verify),
-#   assembleDebug, APK upload.
+# v3 se farq (2026-11-09 ~13:35 PKT):
+# - SDK install ab `cmdline-tools/latest` ka rasta HARDCODE nahi karta.
+#   Runner par `latest` naam ka folder ho ya na ho — script khud dhoondta hai
+#   ke sdkmanager kahan para hai. Agar kahin bhi na mile to saaf error dega.
+# - Baaki sab v3 jaisa hai: Gradle seedha gradle.org se (curl), setup-java v5,
+#   SDK install + verify, assembleDebug, APK upload.
 
 name: Build Android APK
 
@@ -41,8 +39,11 @@ jobs:
         run: |
           echo "ANDROID_HOME=$ANDROID_HOME"
           ls "$ANDROID_HOME/cmdline-tools"
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 2>&1 || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" "build-tools;34.0.0"
+          SDKMANAGER=$(find "$ANDROID_HOME/cmdline-tools" -maxdepth 2 -name sdkmanager -type f | head -1)
+          echo "sdkmanager found at: $SDKMANAGER"
+          test -n "$SDKMANAGER" || { echo "ERROR: sdkmanager not found under $ANDROID_HOME/cmdline-tools"; exit 1; }
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+          "$SDKMANAGER" "platforms;android-34" "build-tools;34.0.0"
           echo "--- build-tools check ---"
           ls "$ANDROID_HOME/build-tools/34.0.0" | head -5
           echo "--- platform check ---"
