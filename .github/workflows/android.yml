@@ -1,7 +1,7 @@
 # MypersonalAccess — Android APK auto-build (GitHub Actions) — v5
 #
 # v4 se farq (2026-11-09 ~14:07 PKT):
-# - v4 ka `find ... -maxdepth 2` GHALAT tha: sdkmanager is raaste par hai
+# - v4 ka `find ... -axdepth 2` GHALAT tha: sdkmanager is raaste par hai
 #   cmdline-tools/latest/bin/sdkmanager — yani depth 3 par, jabke maxdepth 2
 #   sirf depth 2 tak dhoondta hai. Isi liye "not found" aaya jabke "latest"
 #   folder maujood tha (log se saaf nazar aaya).
